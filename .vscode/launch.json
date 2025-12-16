@@ -17,7 +17,10 @@
             ],
             "cwd": "${workspaceFolder}/build",
             "preLaunchTask": "GCC: Build Debug",
-            "initCommands": ["settings set target.disable-aslr false"]
+            "initCommands": [
+                "settings set target.disable-aslr false"
+            ],
+            "stopOnEntry": false,
         },
         {
             "type": "lldb",
