@@ -68,6 +68,7 @@ int main(int argc, char *argv[]) {
             break;
         }
         case CryptoGuard::ProgramOptions::COMMAND_TYPE::DECRYPT: {
+            cryptoCtx.DecryptFile(input, output, options.GetPassword());
             break;
         }
         case CryptoGuard::ProgramOptions::COMMAND_TYPE::CHECKSUM: {

@@ -11,9 +11,13 @@
             "program": "${workspaceFolder}/build/CryptoGuard",
             "args": [
                 "-i",
-                "input.txt",
+                //"input.txt",
+                "result.out",
+                "-o",
+                "decrypt.out",
                 "--command",
-                "encrypt",
+                //"encrypt",
+                "decrypt",
                 "--password",
                 "123321123"
             ],
