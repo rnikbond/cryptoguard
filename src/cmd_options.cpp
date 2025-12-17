@@ -56,22 +56,17 @@ ProgramOptions::~ProgramOptions() = default;
 
 void ProgramOptions::Parse(int argc, char *argv[]) {
 
-    try {
-        po::variables_map argsMap;
-        po::parsed_options argsParsed = po::parse_command_line(argc, argv, desc_);
-        po::store(argsParsed, argsMap);
+    po::variables_map argsMap;
+    po::parsed_options argsParsed = po::parse_command_line(argc, argv, desc_);
+    po::store(argsParsed, argsMap);
 
-        if (argsMap.count("help")) {
-            std::cout << "--- HELP MESSAGE ---" << std::endl;
-            std::cout << desc_ << std::endl;
-            exit(0);
-        }
-
-        po::notify(argsMap);
-
-    } catch (...) {
-        throw;
+    if (argsMap.count("help")) {
+        std::cout << "--- HELP MESSAGE ---" << std::endl;
+        std::cout << desc_ << std::endl;
+        exit(0);
     }
+
+    po::notify(argsMap);
 }
 
 }  // namespace CryptoGuard
