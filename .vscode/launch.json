@@ -13,7 +13,9 @@
                 "-i",
                 "input.txt",
                 "--command",
-                "checksum"
+                "encrypt",
+                "--password",
+                "123321123"
             ],
             "cwd": "${workspaceFolder}/build",
             "preLaunchTask": "GCC: Build Debug",

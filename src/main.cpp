@@ -1,8 +1,11 @@
 #include "cmd_options.h"
 #include "crypto_guard_ctx.h"
+#include <filesystem>
+#include <fstream>
 #include <iostream>
 #include <openssl/evp.h>
 #include <print>
+#include <stdexcept>
 
 int main(int argc, char *argv[]) {
     try {
@@ -53,8 +56,28 @@ int main(int argc, char *argv[]) {
 
         CryptoGuard::ProgramOptions options;
         options.Parse(argc, argv);
-        CryptoGuard::ProgramOptions::COMMAND_TYPE cmd = options.GetCommand();
-        std::print("cmd: {}\n", static_cast<int>(cmd));
+
+        std::fstream input(options.GetInputFile(), std::ios::in | std::ios::binary);
+        std::fstream output(options.GetOutputFile(), std::ios::out | std::ios::binary);
+
+        CryptoGuard::CryptoGuardCtx cryptoCtx;
+
+        switch (options.GetCommand()) {
+        case CryptoGuard::ProgramOptions::COMMAND_TYPE::ENCRYPT: {
+            cryptoCtx.EncryptFile(input, output, options.GetPassword());
+            break;
+        }
+        case CryptoGuard::ProgramOptions::COMMAND_TYPE::DECRYPT: {
+            break;
+        }
+        case CryptoGuard::ProgramOptions::COMMAND_TYPE::CHECKSUM: {
+            break;
+        }
+        default:
+            throw std::runtime_error{"unknown command"};
+        }
+
+        // std::ios::binary - флаг открытия файла для шифрования
 
         // CryptoGuard::CryptoGuardCtx cryptoCtx;
 
