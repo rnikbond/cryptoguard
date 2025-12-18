@@ -192,3 +192,33 @@ TEST(CryptoGuardCtx, Checksum_InvalidInput) {
     CryptoGuard::CryptoGuardCtx ctx;
     ASSERT_THROW(ctx.CalculateChecksum(inStream), std::runtime_error);
 }
+
+/**
+ * @brief Тест шифрования: проверка дешифровки через контрольную сумму
+ *
+ * Сначала вычисляется хеш строки, потом строка шифруется, затем строка дешифруется,
+ * вычисляется хеш дешифрованной строки и в конце эти хеши сравниваются.
+ */
+TEST(CryptoGuardCtx, Crypto_RoundTrip) {
+
+    std::string input = "ABCDEFGHIGKLMNOPQRSTUVWXYZ0123456789-+|'!@#$%^&*()[]{}";
+    std::string input_hash;
+    std::string decrypt_hash;
+    std::string_view password = "key_to_the_heart";
+
+    std::stringstream inStream(input);
+    std::stringstream encryptStream;
+    std::stringstream decryptStream;
+
+    CryptoGuard::CryptoGuardCtx ctx;
+
+    ASSERT_NO_THROW(input_hash = ctx.CalculateChecksum(inStream));
+    inStream.clear();
+    inStream.seekg(0, std::ios::beg);
+
+    ASSERT_NO_THROW(ctx.EncryptFile(inStream, encryptStream, password));
+    ASSERT_NO_THROW(ctx.DecryptFile(encryptStream, decryptStream, password));
+    ASSERT_NO_THROW(decrypt_hash = ctx.CalculateChecksum(decryptStream));
+
+    EXPECT_EQ(decrypt_hash, input_hash);
+}
