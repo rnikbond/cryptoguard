@@ -1,10 +1,12 @@
 #include "crypto_guard_ctx.h"
 #include <array>
+#include <iomanip>
 #include <ios>
 #include <iostream>
 #include <memory>
 #include <openssl/err.h>
 #include <openssl/evp.h>
+#include <sstream>
 #include <stdexcept>
 
 #define AES_BLOCK_SIZE 16
@@ -49,7 +51,40 @@ public:
         doCrypt(inStream, outStream, password, false);
     }
 
-    std::string CalculateChecksum(std::iostream &inStream) { return "NOT_IMPLEMENTED"; }
+    /**
+     * @brief Вычисление контрольной суммы
+     *
+     * @param inStream Поток входных данных
+     * @return Контрольную сумму в hex виде
+     *
+     * Для вычисления контрольной суммы используется алгоритм SHA256
+     */
+    std::string CalculateChecksum(std::iostream &inStream) {
+
+        EVP_MD_CTX *ctx = EVP_MD_CTX_new();
+        const EVP_MD *md = EVP_sha256();
+        EVP_DigestInit_ex(ctx, md, nullptr);
+
+        unsigned char inBuffer[4096];
+        while (inStream.read((char *)inBuffer, sizeof(inBuffer)) || inStream.gcount() > 0) {
+            int bytesRead = inStream.gcount();
+            EVP_DigestUpdate(ctx, &inBuffer, bytesRead);
+        }
+
+        unsigned char hash[EVP_MAX_MD_SIZE];
+        unsigned int len = 0;
+        EVP_DigestFinal_ex(ctx, hash, &len);
+
+        EVP_MD_CTX_free(ctx);
+
+        std::stringstream hexStream;
+        hexStream << std::hex << std::setfill('0');
+        for (size_t i = 0; i < len; i++) {
+            hexStream << std::setw(2) << static_cast<int>(hash[i]);
+        }
+
+        return hexStream.str();
+    }
 
 private:
     /**

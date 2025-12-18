@@ -58,20 +58,22 @@ int main(int argc, char *argv[]) {
         options.Parse(argc, argv);
 
         std::fstream input(options.GetInputFile(), std::ios::in | std::ios::binary);
-        std::fstream output(options.GetOutputFile(), std::ios::out | std::ios::binary);
 
         CryptoGuard::CryptoGuardCtx cryptoCtx;
 
         switch (options.GetCommand()) {
         case CryptoGuard::ProgramOptions::COMMAND_TYPE::ENCRYPT: {
+            std::fstream output(options.GetOutputFile(), std::ios::out | std::ios::binary);
             cryptoCtx.EncryptFile(input, output, options.GetPassword());
             break;
         }
         case CryptoGuard::ProgramOptions::COMMAND_TYPE::DECRYPT: {
+            std::fstream output(options.GetOutputFile(), std::ios::out | std::ios::binary);
             cryptoCtx.DecryptFile(input, output, options.GetPassword());
             break;
         }
         case CryptoGuard::ProgramOptions::COMMAND_TYPE::CHECKSUM: {
+            std::print(std::cout, "{}\n", cryptoCtx.CalculateChecksum(input));
             break;
         }
         default:
