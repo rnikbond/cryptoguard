@@ -1,5 +1,6 @@
 #include "crypto_guard_ctx.h"
 #include <array>
+#include <format>
 #include <iomanip>
 #include <ios>
 #include <iostream>
@@ -61,20 +62,36 @@ public:
      */
     std::string CalculateChecksum(std::iostream &inStream) {
 
+        if (!inStream) {
+            throw std::runtime_error{"invalid input stream"};
+        }
+
         std::unique_ptr<EVP_MD_CTX, decltype([](EVP_MD_CTX *ctx) { EVP_MD_CTX_free(ctx); })> ctx(EVP_MD_CTX_new());
 
         const EVP_MD *md = EVP_sha256();
-        EVP_DigestInit_ex(ctx.get(), md, nullptr);
+        int err = EVP_DigestInit_ex(ctx.get(), md, nullptr);
+        if (err != 1) {
+            std::string errText = ERR_error_string(ERR_get_error(), nullptr);
+            throw std::runtime_error{std::format("EVP_DigestInit_ex: {}", errText)};
+        }
 
         unsigned char inBuffer[4096];
         while (inStream.read((char *)inBuffer, sizeof(inBuffer)) || inStream.gcount() > 0) {
             int bytesRead = inStream.gcount();
-            EVP_DigestUpdate(ctx.get(), &inBuffer, bytesRead);
+            err = EVP_DigestUpdate(ctx.get(), &inBuffer, bytesRead);
+            if (err != 1) {
+                std::string errText = ERR_error_string(ERR_get_error(), nullptr);
+                throw std::runtime_error{std::format("EVP_DigestUpdate: {}", errText)};
+            }
         }
 
         unsigned char hash[EVP_MAX_MD_SIZE];
         unsigned int len = 0;
-        EVP_DigestFinal_ex(ctx.get(), hash, &len);
+        err = EVP_DigestFinal_ex(ctx.get(), hash, &len);
+        if (err != 1) {
+            std::string errText = ERR_error_string(ERR_get_error(), nullptr);
+            throw std::runtime_error{std::format("EVP_DigestFinal_ex: {}", errText)};
+        }
 
         std::stringstream hexStream;
         hexStream << std::hex << std::setfill('0');
