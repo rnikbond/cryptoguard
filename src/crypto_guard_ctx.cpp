@@ -85,9 +85,9 @@ public:
             }
         }
 
-        unsigned char hash[EVP_MAX_MD_SIZE];
+        std::vector<unsigned char> hash(EVP_MAX_MD_SIZE);
         unsigned int len = 0;
-        err = EVP_DigestFinal_ex(ctx.get(), hash, &len);
+        err = EVP_DigestFinal_ex(ctx.get(), hash.data(), &len);
         if (err != 1) {
             std::string errText = ERR_error_string(ERR_get_error(), nullptr);
             throw std::runtime_error{std::format("EVP_DigestFinal_ex: {}", errText)};
@@ -96,7 +96,7 @@ public:
         std::stringstream hexStream;
         hexStream << std::hex << std::setfill('0');
         for (size_t i = 0; i < len; i++) {
-            hexStream << std::setw(2) << static_cast<int>(hash[i]);
+            hexStream << std::setw(2) << static_cast<int>(hash.at(i));
         }
 
         return hexStream.str();
