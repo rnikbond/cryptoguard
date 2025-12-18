@@ -9,8 +9,7 @@
 #include <openssl/evp.h>
 #include <sstream>
 #include <stdexcept>
-
-#define AES_BLOCK_SIZE 16
+#include <vector>
 
 namespace CryptoGuard {
 
@@ -75,10 +74,11 @@ public:
             throw std::runtime_error{std::format("EVP_DigestInit_ex: {}", errText)};
         }
 
-        unsigned char inBuffer[4096];
-        while (inStream.read((char *)inBuffer, sizeof(inBuffer)) || inStream.gcount() > 0) {
+        const size_t BATCH_SIZE = 4096;
+        std::vector<char> buffer(BATCH_SIZE);
+        while (inStream.read(buffer.data(), buffer.size()) || inStream.gcount() > 0) {
             int bytesRead = inStream.gcount();
-            err = EVP_DigestUpdate(ctx.get(), &inBuffer, bytesRead);
+            err = EVP_DigestUpdate(ctx.get(), buffer.data(), bytesRead);
             if (err != 1) {
                 std::string errText = ERR_error_string(ERR_get_error(), nullptr);
                 throw std::runtime_error{std::format("EVP_DigestUpdate: {}", errText)};
@@ -130,28 +130,31 @@ private:
             throw std::runtime_error{std::format("EVP_CipherInit_ex: {}", errText)};
         }
 
-        unsigned char inBuffer[AES_BLOCK_SIZE];
-        unsigned char outBuffer[AES_BLOCK_SIZE + EVP_MAX_BLOCK_LENGTH];
         int bytesWrite = 0;
-        while (inStream.read((char *)inBuffer, sizeof(inBuffer)) || inStream.gcount() > 0) {
+        const size_t AES_BLOCK_SIZE = 16;
+        std::vector<char> in_buffer(AES_BLOCK_SIZE);
+        std::vector<char> out_buffer(AES_BLOCK_SIZE + EVP_MAX_BLOCK_LENGTH);
+
+        while (inStream.read(in_buffer.data(), in_buffer.size()) || inStream.gcount() > 0) {
             int bytesRead = inStream.gcount();
-            err = EVP_CipherUpdate(ctx.get(), outBuffer, &bytesWrite, inBuffer, bytesRead);
+            err = EVP_CipherUpdate(ctx.get(), reinterpret_cast<unsigned char *>(out_buffer.data()), &bytesWrite,
+                                   reinterpret_cast<unsigned char *>(in_buffer.data()), bytesRead);
             if (err != 1) {
                 char *errText = ERR_error_string(ERR_get_error(), nullptr);
                 throw std::runtime_error{std::format("EVP_CipherUpdate: {}", errText)};
             }
             if (bytesWrite > 0) {
-                outStream.write((char *)outBuffer, bytesWrite);
+                outStream.write(out_buffer.data(), bytesWrite);
             }
         }
 
-        err = EVP_CipherFinal_ex(ctx.get(), (unsigned char *)&outBuffer, &bytesWrite);
+        err = EVP_CipherFinal_ex(ctx.get(), reinterpret_cast<unsigned char *>(out_buffer.data()), &bytesWrite);
         if (err != 1) {
             char *errText = ERR_error_string(ERR_get_error(), nullptr);
             throw std::runtime_error{std::format("EVP_CipherFinal_ex: {}", errText)};
         }
         if (bytesWrite > 0) {
-            outStream.write((char *)outBuffer, bytesWrite);
+            outStream.write(out_buffer.data(), bytesWrite);
         }
     }
 
