@@ -70,9 +70,12 @@ private:
             throw std::runtime_error{"invalid output stream"};
         }
 
-        EVP_CIPHER_CTX *ctx = EVP_CIPHER_CTX_new();
+        std::unique_ptr<EVP_CIPHER_CTX, decltype([](EVP_CIPHER_CTX *ctx) { EVP_CIPHER_CTX_free(ctx); })> ctx(
+            EVP_CIPHER_CTX_new());
+
         auto params = CreateChiperParamsFromPassword(password, isEncrypt);
-        int err = EVP_CipherInit_ex(ctx, params.cipher, nullptr, params.key.data(), params.iv.data(), params.encrypt);
+        int err =
+            EVP_CipherInit_ex(ctx.get(), params.cipher, nullptr, params.key.data(), params.iv.data(), params.encrypt);
         if (err != 1) {
             char *errText = ERR_error_string(ERR_get_error(), nullptr);
             throw std::runtime_error{std::format("EVP_CipherInit_ex: {}", errText)};
@@ -83,7 +86,7 @@ private:
         int bytesWrite = 0;
         while (inStream.read((char *)inBuffer, sizeof(inBuffer)) || inStream.gcount() > 0) {
             int bytesRead = inStream.gcount();
-            err = EVP_CipherUpdate(ctx, outBuffer, &bytesWrite, inBuffer, bytesRead);
+            err = EVP_CipherUpdate(ctx.get(), outBuffer, &bytesWrite, inBuffer, bytesRead);
             if (err != 1) {
                 char *errText = ERR_error_string(ERR_get_error(), nullptr);
                 throw std::runtime_error{std::format("EVP_CipherUpdate: {}", errText)};
@@ -93,7 +96,7 @@ private:
             }
         }
 
-        err = EVP_CipherFinal_ex(ctx, (unsigned char *)&outBuffer, &bytesWrite);
+        err = EVP_CipherFinal_ex(ctx.get(), (unsigned char *)&outBuffer, &bytesWrite);
         if (err != 1) {
             char *errText = ERR_error_string(ERR_get_error(), nullptr);
             throw std::runtime_error{std::format("EVP_CipherFinal_ex: {}", errText)};
@@ -101,8 +104,6 @@ private:
         if (bytesWrite > 0) {
             outStream.write((char *)outBuffer, bytesWrite);
         }
-
-        EVP_CIPHER_CTX_free(ctx);
     }
 
     /**
