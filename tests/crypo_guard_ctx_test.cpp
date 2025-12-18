@@ -142,3 +142,53 @@ TEST(CryptoGuardCtx, Decrypt_EmptyPassword) {
     CryptoGuard::CryptoGuardCtx ctx;
     ASSERT_THROW(ctx.DecryptFile(inStream, outStream, password), std::runtime_error);
 }
+
+/**
+ * @brief Тест контрольной суммы: корректные входные данные
+ *
+ * Ошибок/исключений не ожидается
+ */
+TEST(CryptoGuardCtx, Checksum_Correct) {
+
+    std::string input = "ABCDEFGHIGKLMNOPQRSTUVWXYZ0123456789-+|'!@#$%^&*()[]{}";
+    std::string expect_hash = "3b0040cc6b156591e4de5dc3259dd735ba5585533495de359ddfe007fb7a1574";
+    std::string actual_hash;
+
+    std::stringstream inStream(input);
+
+    CryptoGuard::CryptoGuardCtx ctx;
+    ASSERT_NO_THROW(actual_hash = ctx.CalculateChecksum(inStream));
+    EXPECT_EQ(actual_hash, expect_hash);
+}
+
+/**
+ * @brief Тест контрольной суммы: Размер входных данных < 16 байт
+ *
+ * Проверяется наличие вызова EVP_DigestFinal_ex()
+ */
+TEST(CryptoGuardCtx, Checksum_LenLess16) {
+
+    std::string input = "ABC";
+    std::string expect_hash = "b5d4045c3f466fa91fe2cc6abe79232a1a57cdf104f7a26e716e0a1e2789df78";
+    std::string actual_hash;
+
+    std::stringstream inStream(input);
+
+    CryptoGuard::CryptoGuardCtx ctx;
+    ASSERT_NO_THROW(actual_hash = ctx.CalculateChecksum(inStream));
+    EXPECT_EQ(actual_hash, expect_hash);
+}
+
+/**
+ * @brief Тест контрольной суммы: входной поток с флагами ошибки
+ *
+ * Ожидается исключение
+ */
+TEST(CryptoGuardCtx, Checksum_InvalidInput) {
+
+    std::stringstream inStream;
+    inStream.setstate(std::ios::failbit);
+
+    CryptoGuard::CryptoGuardCtx ctx;
+    ASSERT_THROW(ctx.CalculateChecksum(inStream), std::runtime_error);
+}
