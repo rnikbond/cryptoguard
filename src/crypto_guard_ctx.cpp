@@ -61,21 +61,20 @@ public:
      */
     std::string CalculateChecksum(std::iostream &inStream) {
 
-        EVP_MD_CTX *ctx = EVP_MD_CTX_new();
+        std::unique_ptr<EVP_MD_CTX, decltype([](EVP_MD_CTX *ctx) { EVP_MD_CTX_free(ctx); })> ctx(EVP_MD_CTX_new());
+
         const EVP_MD *md = EVP_sha256();
-        EVP_DigestInit_ex(ctx, md, nullptr);
+        EVP_DigestInit_ex(ctx.get(), md, nullptr);
 
         unsigned char inBuffer[4096];
         while (inStream.read((char *)inBuffer, sizeof(inBuffer)) || inStream.gcount() > 0) {
             int bytesRead = inStream.gcount();
-            EVP_DigestUpdate(ctx, &inBuffer, bytesRead);
+            EVP_DigestUpdate(ctx.get(), &inBuffer, bytesRead);
         }
 
         unsigned char hash[EVP_MAX_MD_SIZE];
         unsigned int len = 0;
-        EVP_DigestFinal_ex(ctx, hash, &len);
-
-        EVP_MD_CTX_free(ctx);
+        EVP_DigestFinal_ex(ctx.get(), hash, &len);
 
         std::stringstream hexStream;
         hexStream << std::hex << std::setfill('0');
