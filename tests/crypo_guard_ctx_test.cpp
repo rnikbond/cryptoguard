@@ -1,7 +1,7 @@
 #include "crypto_guard_ctx.h"
 #include <gtest/gtest.h>
-#include <istream>
 #include <sstream>
+#include <stdexcept>
 
 /**
  * @brief Тест шифрования и дешифрования с корректными аргументами
@@ -34,7 +34,7 @@ TEST(CryptoGuardCtx, Encrypt_InvalidInputStream) {
     inStream.setstate(std::ios::failbit);
 
     CryptoGuard::CryptoGuardCtx ctx;
-    EXPECT_ANY_THROW(ctx.EncryptFile(inStream, outStream, password));
+    ASSERT_THROW(ctx.EncryptFile(inStream, outStream, password), std::runtime_error);
 }
 
 /**
@@ -52,7 +52,7 @@ TEST(CryptoGuardCtx, Encrypt_InvalidOutputStream) {
     outStream.setstate(std::ios::failbit);
 
     CryptoGuard::CryptoGuardCtx ctx;
-    EXPECT_ANY_THROW(ctx.EncryptFile(inStream, outStream, password));
+    ASSERT_THROW(ctx.EncryptFile(inStream, outStream, password), std::runtime_error);
 }
 
 /**
@@ -70,7 +70,7 @@ TEST(CryptoGuardCtx, Encrypt_EmptyPassword) {
     outStream.setstate(std::ios::failbit);
 
     CryptoGuard::CryptoGuardCtx ctx;
-    EXPECT_ANY_THROW(ctx.EncryptFile(inStream, outStream, password));
+    ASSERT_THROW(ctx.EncryptFile(inStream, outStream, password), std::runtime_error);
 }
 
 /**
@@ -104,7 +104,7 @@ TEST(CryptoGuardCtx, Decrypt_InvalidInputStream) {
     inStream.setstate(std::ios::failbit);
 
     CryptoGuard::CryptoGuardCtx ctx;
-    EXPECT_ANY_THROW(ctx.DecryptFile(inStream, outStream, password));
+    ASSERT_THROW(ctx.DecryptFile(inStream, outStream, password), std::runtime_error);
 }
 
 /**
@@ -122,7 +122,7 @@ TEST(CryptoGuardCtx, Decrypt_InvalidOutputStream) {
     outStream.setstate(std::ios::failbit);
 
     CryptoGuard::CryptoGuardCtx ctx;
-    EXPECT_ANY_THROW(ctx.DecryptFile(inStream, outStream, password));
+    ASSERT_THROW(ctx.DecryptFile(inStream, outStream, password), std::runtime_error);
 }
 
 /**
@@ -140,5 +140,5 @@ TEST(CryptoGuardCtx, Decrypt_EmptyPassword) {
     outStream.setstate(std::ios::failbit);
 
     CryptoGuard::CryptoGuardCtx ctx;
-    EXPECT_ANY_THROW(ctx.EncryptFile(inStream, outStream, password));
+    ASSERT_THROW(ctx.DecryptFile(inStream, outStream, password), std::runtime_error);
 }
