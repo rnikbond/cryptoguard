@@ -12,12 +12,23 @@
             "args": [
                 "-i",
                 "input.txt",
+                //"result.out",
+                "-o",
+                //"decrypt.out",
+                "checksum.out",
                 "--command",
-                "checksum"
+                //"encrypt",
+                //"decrypt",
+                "checksum",
+                "--password",
+                "123321123"
             ],
             "cwd": "${workspaceFolder}/build",
             "preLaunchTask": "GCC: Build Debug",
-            "initCommands": ["settings set target.disable-aslr false"]
+            "initCommands": [
+                "settings set target.disable-aslr false"
+            ],
+            "stopOnEntry": false,
         },
         {
             "type": "lldb",
